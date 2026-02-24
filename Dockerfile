@@ -1,10 +1,15 @@
-FROM maven:3.9.6-eclipse-temurin-17 AS build
-WORKDIR /app
-COPY . .
-RUN mvn clean package -DskipTests
+# Use OpenJDK 17
+FROM openjdk:17
 
-FROM eclipse-temurin:17-jdk
+# Set workdir
 WORKDIR /app
-COPY --from=build /app/target/*.jar app.jar
+
+# Copy WAR and webapp-runner
+COPY target/onlinebookstore.war /app/onlinebookstore.war
+COPY target/dependency/webapp-runner.jar /app/webapp-runner.jar
+
+# Expose port
 EXPOSE 8080
-ENTRYPOINT ["java","-jar","app.jar"]
+
+# Run WAR with webapp-runner
+CMD ["java","-jar","webapp-runner.jar","--port","8080","onlinebookstore.war"]
