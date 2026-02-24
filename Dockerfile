@@ -1,17 +1,16 @@
-# Use OpenJDK 17
-FROM openjdk:17
+# Dockerfile
+# Use a working OpenJDK 17 image
+FROM openjdk:17-jdk
 
-# Set working directory inside container
+# Set working directory
 WORKDIR /app
 
-# Copy the WAR file built by Maven
+# Copy WAR and webapp-runner jar
 COPY target/onlinebookstore.war /app/onlinebookstore.war
-
-# Copy webapp-runner jar (already downloaded by Maven)
 COPY target/dependency/webapp-runner.jar /app/webapp-runner.jar
 
-# Expose the port
+# Expose port
 EXPOSE 8080
 
-# Command to run the WAR using webapp-runner
+# Run the WAR using webapp-runner
 CMD ["java", "-jar", "webapp-runner.jar", "--port", "8080", "onlinebookstore.war"]
