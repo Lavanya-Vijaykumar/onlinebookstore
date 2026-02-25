@@ -3,8 +3,7 @@ pipeline {
 
     environment {
         DOCKER_IMAGE = "lavanyavijay12/online-bookstore"
-        DOCKER_TAG = "${BUILD_NUMBER}"
-        EC2_IP = "3.110.63.229"
+        DOCKER_TAG = "latest"
     }
 
     tools {
@@ -13,9 +12,21 @@ pipeline {
 
     stages {
 
-        stage('Build Project') {
+        stage('Checkout') {
+            steps {
+                git 'https://github.com/Lavanya-Vijaykumar/onlinebookstore.git'
+            }
+        }
+
+        stage('Build') {
             steps {
                 sh 'mvn clean package'
+            }
+        }
+
+        stage('Test') {
+            steps {
+                sh 'mvn test'
             }
         }
 
@@ -25,7 +36,7 @@ pipeline {
             }
         }
 
-        stage('Login to DockerHub') {
+        stage('Push to DockerHub') {
             steps {
                 withCredentials([usernamePassword(
                     credentialsId: 'dockerhub-creds',
@@ -34,39 +45,20 @@ pipeline {
                 )]) {
                     sh '''
                         echo $PASS | docker login -u $USER --password-stdin
+                        docker push $DOCKER_IMAGE:$DOCKER_TAG
                     '''
                 }
             }
         }
 
-        stage('Push Image to DockerHub') {
+        stage('Deploy Locally') {
             steps {
-                sh 'docker push $DOCKER_IMAGE:$DOCKER_TAG'
+                sh '''
+                    docker stop my-app || true
+                    docker rm my-app || true
+                    docker run -d -p 8080:8080 --name my-app $DOCKER_IMAGE:$DOCKER_TAG
+                '''
             }
-        }
-
-        stage('Deploy to EC2') {
-            steps {
-                sshagent(['ec2-ssh-key']) {
-                    sh """
-                        ssh -o StrictHostKeyChecking=no ec2-user@$EC2_IP '
-                        docker pull $DOCKER_IMAGE:$DOCKER_TAG &&
-                        docker stop bookstore || true &&
-                        docker rm bookstore || true &&
-                        docker run -d -p 8080:8080 --name bookstore $DOCKER_IMAGE:$DOCKER_TAG
-                        '
-                    """
-                }
-            }
-        }
-    }
-
-    post {
-        success {
-            echo "Online Bookstore Deployed Successfully 🚀"
-        }
-        failure {
-            echo "Pipeline Failed ❌"
         }
     }
 }
