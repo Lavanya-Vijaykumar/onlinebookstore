@@ -1,15 +1,11 @@
-# Use official OpenJDK 17 image
-FROM openjdk:17-slim
+FROM tomcat:9-jdk17
 
-# Set working directory
-WORKDIR /app
+# Remove default apps
+RUN rm -rf /usr/local/tomcat/webapps/*
 
-# Copy WAR file and dependencies
-COPY target/onlinebookstore.war /app/onlinebookstore.war
-COPY target/dependency/webapp-runner.jar /app/webapp-runner.jar
+# Copy WAR file
+COPY target/*.war /usr/local/tomcat/webapps/bookstore.war
 
-# Expose port
 EXPOSE 8080
 
-# Run the app
-ENTRYPOINT ["java", "-jar", "/app/webapp-runner.jar", "--port", "8080", "/app/onlinebookstore.war"]
+CMD ["catalina.sh", "run"]
