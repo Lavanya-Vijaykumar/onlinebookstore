@@ -52,13 +52,13 @@ pipeline {
         }
 
         stage('Deploy Locally') {
-            steps {
-                sh '''
-                    docker stop my-app || true
-                    docker rm my-app || true
-                    docker run -d -p 8080:8080 --name my-app $DOCKER_IMAGE:$DOCKER_TAG
-                '''
-            }
-        }
+    steps {
+        sh '''
+            docker stop my-app || true
+            docker rm my-app || true
+            docker run -d -p 8081:8080 --name my-app $DOCKER_IMAGE:$DOCKER_TAG
+        '''
+    }
+}
     }
 }
